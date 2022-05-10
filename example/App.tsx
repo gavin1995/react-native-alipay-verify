@@ -1,12 +1,4 @@
-/**
- * @author XiangHong.Deng
- * @version 1.0.0
- * @Description 支付宝实名认证示例
- * @createTime 2021-11-24 15:00:00
- * @link https://github.com/DengXiangHong/react-native-alipay-verify
- * TODO 需要更换对应的API接口即可使用
- */
-import React, {Component} from "react";
+import React, { Component } from 'react';
 import {
   Alert,
   Button,
@@ -17,9 +9,10 @@ import {
   StatusBar,
   DeviceEventEmitter,
   EmitterSubscription,
-  AppState
-} from "react-native";
-import AlipayVerify, {ResultStatusCode, AlipayVerifyEvent} from "react-native-alipay-verify";
+  AppState,
+} from 'react-native';
+import AlipayVerify, { ResultStatusCode, AlipayVerifyEvent } from 'react-native-alipay-verify';
+
 type State = {
   bizCode: string,
   name: string,
@@ -32,28 +25,28 @@ export default class App extends Component<any, State> {
   constructor(props: any) {
     super(props);
     this.state = {
-      certifyId: "",
-      bizCode: "",
-      name: "",
-      no: "",
-      isSuccess: false
+      certifyId: '',
+      bizCode: '',
+      name: '',
+      no: '',
+      isSuccess: false,
     };
   }
 
   componentDidMount() {
     AlipayVerify.getBizCode()
       .then((bizCode) => {
-        this.setState({bizCode});
+        this.setState({ bizCode });
       }).catch((error) => console.log(error));
     // 监听支付宝认证结果
-    this.eventListener = DeviceEventEmitter.addListener(AlipayVerifyEvent.EVENT_QUERY_CERTIFY_RESULT,(event) => {
-      console.log("监听："+ JSON.stringify(event));
+    this.eventListener = DeviceEventEmitter.addListener(AlipayVerifyEvent.EVENT_QUERY_CERTIFY_RESULT, (event) => {
+      console.log('监听：' + JSON.stringify(event));
       this.queryCertifyResult(JSON.parse(JSON.stringify(event)).certifyId);
-    })
+    });
     // 回到前台时处理 认证状态
     AppState.addEventListener('change', (appState) => {
-      if(appState === 'active' && this.state.certifyId){
-        console.log("监听："+ appState);
+      if (appState === 'active' && this.state.certifyId) {
+        console.log('监听：' + appState);
         this.queryCertifyResult(this.state.certifyId);
       }
     });
@@ -65,28 +58,28 @@ export default class App extends Component<any, State> {
 
   onChangeText(text: string, isNo: boolean) {
     if (isNo) {
-      this.setState({no: text});
+      this.setState({ no: text });
     } else {
-      this.setState({name: text});
+      this.setState({ name: text });
     }
   }
 
   submit() {
-    let error = "";
+    let error = '';
     if (!this.state.no) {
-      error = "请填写身份证号码"
+      error = '请填写身份证号码';
     }
     if (!this.state.name) {
-      error = "请填写真实姓名"
+      error = '请填写真实姓名';
     }
     if (!this.state.bizCode) {
-      error = "场景码获取失败"
+      error = '场景码获取失败';
     }
     if (error) {
       Alert.alert(
-        "Error",
+        'Error',
         error,
-        [{text: "OK"}]
+        [{ text: 'OK' }],
       );
       return;
     }
@@ -98,12 +91,12 @@ export default class App extends Component<any, State> {
   }
 
   getCertifyData(formData: any) {
-    let url = "http://172.16.1.62:38081/jforum.html?module=aliPayVerifyAction&action=getCertifyData&rqType=ajax&appName=Ly&platform=android";
-    url += "&bizCode=" + formData.bizCode + "&certName=" + this.state.name + "&certNo=" + this.state.no
+    let url = 'http://172.16.1.62:38081/jforum.html?module=aliPayVerifyAction&action=getCertifyData&rqType=ajax&appName=Ly&platform=android';
+    url += '&bizCode=' + formData.bizCode + '&certName=' + this.state.name + '&certNo=' + this.state.no;
     fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
     }).then((response) => {
       return response.json();
@@ -113,9 +106,9 @@ export default class App extends Component<any, State> {
         this.verify(json);
       } else {
         Alert.alert(
-          "Message",
+          'Message',
           json.message,
-          [{text: "OK"}]
+          [{ text: 'OK' }],
         );
       }
     }).catch((error) => {
@@ -124,15 +117,18 @@ export default class App extends Component<any, State> {
   }
 
   verify(verifyData: any) {
-    this.setState({certifyId:verifyData.certifyId});
+    this.setState({ certifyId: verifyData.certifyId });
     AlipayVerify.verify(verifyData.certifyId, verifyData.certifyUrl).then((verifyResult) => {
-      let message = ""
+      let message = '';
       switch (Number(verifyResult)) {
-        case ResultStatusCode.NETWORK_ANOMALY: message = '网络异常';
+        case ResultStatusCode.NETWORK_ANOMALY:
+          message = '网络异常';
           break;
-        case ResultStatusCode.SYSTEM_EXCEPTION: message = '系统异常';
+        case ResultStatusCode.SYSTEM_EXCEPTION:
+          message = '系统异常';
           break;
-        case ResultStatusCode.USER_CANCEL: message = '用户取消认证';
+        case ResultStatusCode.USER_CANCEL:
+          message = '用户取消认证';
           break;
         case ResultStatusCode.VERIFY_SUCCESS:
           // 向认证服务器 证实 认证结果
@@ -142,28 +138,28 @@ export default class App extends Component<any, State> {
           // 等待认证结果， 通过监听方式得到认证结束通知
           break;
         default:
-          message = "调起支付宝SDK失败，错误码："+ verifyResult
+          message = '调起支付宝SDK失败，错误码：' + verifyResult;
           break;
       }
-      console.log(message+ " " + verifyResult);
-      if(message){
+      console.log(message + ' ' + verifyResult);
+      if (message) {
         Alert.alert(
-          "Message",
+          'Message',
           message,
-          [{text: "OK"}]
+          [{ text: 'OK' }],
         );
       }
     }).catch((error) => console.log(error));
   }
 
   queryCertifyResult(certifyId: string) {
-    let url = "http://172.16.1.62:38081/jforum.html?module=aliPayVerifyAction&action=queryCertifyResult&rqType=ajax&appName=Ly&platform=android";
-    url += "&certifyId="+ certifyId
+    let url = 'http://172.16.1.62:38081/jforum.html?module=aliPayVerifyAction&action=queryCertifyResult&rqType=ajax&appName=Ly&platform=android';
+    url += '&certifyId=' + certifyId;
     console.log(url);
     fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
     }).then((response) => {
       return response.json();
@@ -171,13 +167,13 @@ export default class App extends Component<any, State> {
       console.log(json);
       if (json.isSuccess) {
         this.setState({
-          isSuccess: true
-        })
+          isSuccess: true,
+        });
       }
       Alert.alert(
-        "Message",
+        'Message',
         json.message,
-        [{text: "OK"}]
+        [{ text: 'OK' }],
       );
 
     }).catch((error) => {
@@ -189,61 +185,75 @@ export default class App extends Component<any, State> {
     return (
       <View style={styles.container}>
         <StatusBar barStyle={'dark-content'} />
-        <View style={{alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", height: 96, paddingTop: 30}}>
+        <View style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#FFFFFF',
+          height: 96,
+          paddingTop: 30,
+        }}>
           <Text style={styles.title}>支付宝实名认证</Text>
         </View>
-        {this.state.isSuccess?
-          <View style={{alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF", padding: 15, marginTop: 5, width: '100%', height: 200}}>
+        {this.state.isSuccess ?
+          <View style={{
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#FFFFFF',
+            padding: 15,
+            marginTop: 5,
+            width: '100%',
+            height: 200,
+          }}>
             <Text style={styles.title}>认证成功</Text>
           </View>
           :
-          <View style={{backgroundColor: "#FFFFFF", padding: 15, marginTop: 5}}>
+          <View style={{ backgroundColor: '#FFFFFF', padding: 15, marginTop: 5 }}>
             <View style={styles.viewRow}>
-              <View style={{flex: 1}}>
-                <Text style={[styles.instructions, {marginRight: 10}]}>认证场景码</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.instructions, { marginRight: 10 }]}>认证场景码</Text>
               </View>
-              <View style={{flex: 2}}>
+              <View style={{ flex: 2 }}>
                 <TextInput
                   style={styles.input}
                   value={this.state.bizCode}
                   editable={false}
-                  placeholder={"未获取到场景码"}
-                  placeholderTextColor={"#999999"}
+                  placeholder={'未获取到场景码'}
+                  placeholderTextColor={'#999999'}
                 />
               </View>
             </View>
             <View style={styles.viewRow}>
-              <View style={{flex: 1}}>
-                <Text style={[styles.instructions, {marginRight: 10}]}>真实姓名</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.instructions, { marginRight: 10 }]}>真实姓名</Text>
               </View>
-              <View style={{flex: 2}}>
+              <View style={{ flex: 2 }}>
                 <TextInput
                   style={styles.input}
                   onChangeText={(text) => this.onChangeText(text, false)}
                   value={this.state.name}
-                  placeholder={"请填写您的真实姓名"}
-                  placeholderTextColor={"#999999"}
+                  placeholder={'请填写您的真实姓名'}
+                  placeholderTextColor={'#999999'}
                 />
               </View>
             </View>
             <View style={styles.viewRow}>
-              <View style={{flex: 1}}>
-                <Text style={[styles.instructions, {marginRight: 10}]}>身份证号码</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.instructions, { marginRight: 10 }]}>身份证号码</Text>
               </View>
-              <View style={{flex: 2}}>
+              <View style={{ flex: 2 }}>
                 <TextInput
                   style={styles.input}
                   onChangeText={(text) => this.onChangeText(text, true)}
                   value={this.state.no}
                   keyboardType={'numeric'}
-                  placeholder={"请填写您的身份证号码"}
-                  placeholderTextColor={"#999999"}
+                  placeholder={'请填写您的身份证号码'}
+                  placeholderTextColor={'#999999'}
                 />
               </View>
             </View>
             <Text style={styles.tips}>* 暂时不支持港澳台、海外地区身份实名认证</Text>
             <Button
-              title={"提交"}
+              title={'提交'}
               onPress={() => this.submit()}
             />
           </View>
@@ -255,34 +265,34 @@ export default class App extends Component<any, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6F7",
+    backgroundColor: '#F5F6F7',
   },
   welcome: {
     fontSize: 20,
-    textAlign: "center",
+    textAlign: 'center',
     margin: 10,
   },
   instructions: {
-    textAlign: "center",
-    color: "#333333",
+    textAlign: 'center',
+    color: '#333333',
     marginBottom: 5,
   },
   viewRow: {
-    width: "80%",
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
+    width: '80%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
   input: {
-    width: "100%",
+    width: '100%',
     height: 40,
     margin: 0,
     padding: 5,
-    color: '#333333'
+    color: '#333333',
   },
   title: {
     fontSize: 17,
-    color: "#333333",
+    color: '#333333',
     lineHeight: 24,
   },
   tips: {
@@ -291,6 +301,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginLeft: 10,
     marginTop: 5,
-    marginBottom: 10
-  }
+    marginBottom: 10,
+  },
 });
