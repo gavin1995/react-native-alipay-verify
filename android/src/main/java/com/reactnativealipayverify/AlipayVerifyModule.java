@@ -3,11 +3,11 @@ package com.reactnativealipayverify;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alipay.face.utils.StringUtil;
 import com.alipay.mobile.android.verify.sdk.ServiceFactory;
 import com.alipay.mobile.android.verify.sdk.interfaces.ICallback;
 import com.facebook.react.bridge.ActivityEventListener;
@@ -95,7 +95,7 @@ public class AlipayVerifyModule extends ReactContextBaseJavaModule implements Li
    */
   @ReactMethod
   public void verify(String certifyId, String certifyUrl, final Promise promise) {
-    if (StringUtil.isNullorEmpty(certifyId) || StringUtil.isNullorEmpty(certifyUrl)) {
+    if (TextUtils.isEmpty(certifyId) || TextUtils.isEmpty(certifyUrl)) {
       promise.reject("ParamsNull", "参数不存在");
       return;
     }
